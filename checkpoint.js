@@ -6,10 +6,10 @@
 // en las homeowrks no es necesario que los vuelvan a definir.
 
 const {
-  Queue,
-  Node,
-  LinkedList,
-  BinarySearchTree
+    Queue,
+    Node,
+    LinkedList,
+    BinarySearchTree
 } = require('./DS.js');
 
 // ----------------------
@@ -42,8 +42,17 @@ const {
 // Pista: utilizar typeof para determinar si el valor de una propiedad es un objeto para aplicar
 // allí la recursión
 
-var objContains = function(obj, prop, value){
- 
+var objContains = function(obj, prop, value) {
+
+    for (const p in obj) {
+        if (typeof(obj[p]) == 'object') {
+            return objContains(obj[p], prop, value)
+        }
+        if (obj[p] === value && p === prop) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -57,8 +66,18 @@ var objContains = function(obj, prop, value){
 // Pista: utilizar el método Array.isArray() para determinar si algun elemento de array es un array anidado
 // [Para más información del método: https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/isArray]
 
-var countArray = function(array){
-  
+var countArray = function(array) {
+
+    suma = 0;
+    for (var i = 0; i < array.length; i++) {
+        if (Array.isArray(array[i])) {
+            suma += countArray(array[i]);
+        } else {
+            suma += array[i];
+        }
+    }
+    return suma;
+
 }
 
 // ---------------------
@@ -77,8 +96,21 @@ var countArray = function(array){
 //    lista.add(3);
 //    lista.size(); --> 3
 
-LinkedList.prototype.size = function(){
- 
+LinkedList.prototype.size = function() {
+
+    if (!this.head) {
+        return 0;
+    }
+    if (this.head && !this.head.next) {
+        return 1;
+    }
+    suma = 1;
+    var nodo = this.head
+    while (nodo.next !== null) {
+        suma += 1
+        nodo = nodo.next;
+    }
+    return suma;
 }
 
 
@@ -98,8 +130,29 @@ LinkedList.prototype.size = function(){
 //    lista.addInPos(2, 3); --> Debería devolver false ya que no es posible agregar en la posición 2
 //    sin antes tener cargada la posición 0 y 1.
 
-LinkedList.prototype.addInPos = function(pos, value){
-  
+LinkedList.prototype.addInPos = function(pos, value) {
+
+    if (pos > this.size()) {
+        return false;
+    }
+    if (pos === this.size()) {
+        this.add(value);
+        return true;
+    }
+    if (pos < this.size()) {
+        index = 0;
+        var current = this.head;
+        while (current.next !== null) {
+            index++
+            if (index === pos) {
+                a = new Node(value)
+                a.next = current.next
+                current.next = a;
+                return true;
+            }
+            current = current.next;
+        }
+    }
 }
 
 // EJERCICIO 5
@@ -109,8 +162,20 @@ LinkedList.prototype.addInPos = function(pos, value){
 //    Lista original: Head --> 1 --> 4 --> 10 --> 13 --> null
 //    Lista nueva luego de aplicar el reverse: Head --> 13 --> 10 --> 4 --> 1 --> null
 
-LinkedList.prototype.reverse = function(){
- 
+
+LinkedList.prototype.reverse = function() {
+
+    var array = [];
+    var current = this.head;
+    while (current !== null) {
+        array.push(current.value);
+        current = current.next;
+    }
+    var listaNueva = new LinkedList();
+    for (var i = array.length - 1; i >= 0; i--) {
+        listaNueva.add(array[i])
+    }
+    return listaNueva;
 }
 
 
@@ -140,7 +205,40 @@ LinkedList.prototype.reverse = function(){
 //    - mazoUserA = [2,10,11]
 //    - mazoUserB = [6,9,10,3,6,4]
 
-var cardGame = function(mazoUserA, mazoUserB){
+var cardGame = function(mazoUserA, mazoUserB) {
+
+    while (mazoUserB.size() > 0 && mazoUserA.size() > 0) {
+        var cartaA = mazoUserA.array[0];
+        var cartaB = mazoUserB.array[0];
+
+        if (cartaA === cartaB) {
+            mazoUserB.dequeue();
+            mazoUserA.dequeue();
+        }
+
+        if (cartaA > cartaB) {
+            mazoUserA.enqueue(cartaA)
+            mazoUserA.enqueue(cartaB);
+            mazoUserB.dequeue();
+            mazoUserA.dequeue();
+        }
+        if (cartaA < cartaB) {
+            mazoUserB.enqueue(cartaB)
+            mazoUserB.enqueue(cartaA);
+            mazoUserA.dequeue();
+            mazoUserB.dequeue();
+        }
+    }
+    if (mazoUserB.size() === 0 && mazoUserA.size() === 0) {
+        return "Game tie!";
+    }
+    if (mazoUserB.size() === 0) {
+        return "A wins!";
+    }
+
+    if (mazoUserA.size() === 0) {
+        return "B wins!";
+    }
 
 }
 
@@ -163,8 +261,13 @@ var cardGame = function(mazoUserA, mazoUserB){
 //      \
 //       5
 
-var generateBST = function(array){
- 
+var generateBST = function(array) {
+
+    var arbol = new BinarySearchTree(array[0]);
+    for (var i = 1; i < array.length; i++) {
+        arbol.insert(array[i]);
+    }
+    return arbol;
 }
 
 
@@ -184,9 +287,22 @@ var generateBST = function(array){
 //    [Donde 2 sería el número sobre el cuál queremos saber su posición en el array]
 
 
-var binarySearch = function (array, target) {
+var binarySearch = function(array, target) {
 
-  
+    var inicio = 0;
+    var fin = array.length - 1;
+    while (inicio <= fin) {
+        var index = Math.floor((inicio + fin) / 2);
+        if (array[index] === target) {
+            return index;
+        } else if (target > array[index]) {
+            inicio = index + 1;
+        } else {
+            fin = index - 1;
+        }
+    }
+    return -1;
+
 }
 
 // EJERCICIO 9
@@ -199,7 +315,19 @@ var binarySearch = function (array, target) {
 
 
 var selectionSort = function(array) {
-  
+
+    var nuevoArray = [];
+    for (var i = 0; i < array.length; i++) {
+        var index = i;
+        for (var j = i + 1; j < array.length; j++) {
+            if (array[j] < array[index]) {
+                index = j;
+            }
+        }
+        nuevoArray.push(array[index]);
+        array[index] = array[i];
+    }
+    return nuevoArray;
 }
 
 // ----- Closures -----
@@ -217,7 +345,12 @@ var selectionSort = function(array) {
 //    sumaDiez(11); --> Devolverá 21 (Ya que 11 + 10 = 21)
 
 function closureSum(numFijo) {
- 
+
+    var numero = numFijo;
+    return function(numFijo) {
+        return numFijo += numero;
+    }
+
 }
 
 // -------------------
@@ -233,18 +366,18 @@ function closureSum(numFijo) {
 //    console.log(anagrams); // [ 'abc', 'acb', 'bac', 'bca', 'cab', 'cba' ]
 
 var allAnagrams = function(string, array, index) {
- 
+
 };
 
 module.exports = {
-  objContains,
-  countArray,
-  LinkedList,
-  Queue,
-  cardGame,
-  generateBST,
-  binarySearch,
-  allAnagrams,
-  selectionSort,
-  closureSum,
+    objContains,
+    countArray,
+    LinkedList,
+    Queue,
+    cardGame,
+    generateBST,
+    binarySearch,
+    allAnagrams,
+    selectionSort,
+    closureSum,
 }
